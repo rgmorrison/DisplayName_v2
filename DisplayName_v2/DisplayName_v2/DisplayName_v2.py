@@ -12,7 +12,6 @@ class DisplayName_v2(ScriptedLoadableModule):
   """Uses ScriptedLoadableModule base class, available at:
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
   """
-
   def __init__(self, parent):
     ScriptedLoadableModule.__init__(self, parent)
     self.parent.title = "DisplayName_v2" # TODO make this more human readable by adding spaces
@@ -37,7 +36,6 @@ class DisplayName_v2Widget(ScriptedLoadableModuleWidget):
   """Uses ScriptedLoadableModuleWidget base class, available at:
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
   """
-
   def setup(self):
     ScriptedLoadableModuleWidget.setup(self)
     #
@@ -98,15 +96,16 @@ class DisplayName_v2Logic(ScriptedLoadableModuleLogic):
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
   """
   def setupCrossHairTracker(self):
+    print("Starting crosshair tracker")
+    self.previousModelPrinted = "None" 
     self.crosshairNode = slicer.util.getNode('Crosshair') 
-    self.observationId = self.crosshairNode.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent, self.printModelName())
-    print("Set up crosshair tracker")
+    self.observationId = self.crosshairNode.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent, self.printModelName)
 
   def stopCrossHairTracker(self):
     self.crosshairNode.RemoveObserver(self.observationId)
     print("Stopped crosshair tracker")
 
-  def printModelName(self):
+  def printModelName(observer,eventid,temp):
     modelDisplayableManager = None
     threeDViewWidget = slicer.app.layoutManager().threeDWidget(0)
     managers = vtk.vtkCollection()
@@ -123,9 +122,11 @@ class DisplayName_v2Logic(ScriptedLoadableModuleLogic):
     modelDisplayableManager.Pick3D(crosshairNode.GetCrosshairRAS())
     if(slicer.mrmlScene.GetNodeByID(modelDisplayableManager.GetPickedNodeID())):
       modelNode = slicer.mrmlScene.GetNodeByID(modelDisplayableManager.GetPickedNodeID()).GetDisplayableNode()
-      print(modelNode.GetName())
-    else:
-      print("Nothing Selected")
+##      if(modelNode.GetName() != self.previousModelPrinted):
+##        just_name = ()
+      print(modelNode.GetName()).split('_')[1]
+    #else:
+      #print("Nothing Selected")
 
 
 class DisplayName_v2Test(ScriptedLoadableModuleTest):
