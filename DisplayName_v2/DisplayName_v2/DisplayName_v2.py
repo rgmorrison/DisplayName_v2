@@ -95,17 +95,29 @@ class DisplayName_v2Logic(ScriptedLoadableModuleLogic):
   Uses ScriptedLoadableModuleLogic base class, available at:
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
   """
+  def __init__(self):
+    self.previousModelPrinted = "None" 
+
+  #
+  # Code executed on start button
+  #
   def setupCrossHairTracker(self):
     print("Starting crosshair tracker")
-    self.previousModelPrinted = "None" 
-    self.crosshairNode = slicer.util.getNode('Crosshair') 
+    self.crosshairNode = slicer.util.getNode('Crosshair')
+    # Set up observer for when tracker moves to execute class function printModelName
     self.observationId = self.crosshairNode.AddObserver(slicer.vtkMRMLCrosshairNode.CursorPositionModifiedEvent, self.printModelName)
 
+  #
+  # Code executed on stop button
+  #
   def stopCrossHairTracker(self):
     self.crosshairNode.RemoveObserver(self.observationId)
     print("Stopped crosshair tracker")
 
-  def printModelName(observer,eventid,temp):
+  #
+  # Code executed when crosshair is moved
+  #
+  def printModelName(self, observer, eventid):
     modelDisplayableManager = None
     threeDViewWidget = slicer.app.layoutManager().threeDWidget(0)
     managers = vtk.vtkCollection()
@@ -120,11 +132,13 @@ class DisplayName_v2Logic(ScriptedLoadableModuleLogic):
 
     crosshairNode = slicer.mrmlScene.GetNodeByID("vtkMRMLCrosshairNodedefault")
     modelDisplayableManager.Pick3D(crosshairNode.GetCrosshairRAS())
+
+    # Only print name once and make sure that the crosshair is not on nothing
     if(slicer.mrmlScene.GetNodeByID(modelDisplayableManager.GetPickedNodeID())):
       modelNode = slicer.mrmlScene.GetNodeByID(modelDisplayableManager.GetPickedNodeID()).GetDisplayableNode()
-##      if(modelNode.GetName() != self.previousModelPrinted):
-##        just_name = ()
-      print(modelNode.GetName()).split('_')[1]
+      if(modelNode.GetName() != self.previousModelPrinted):
+        print(modelNode.GetName()).split('_')[1]
+        self.previousModelPrinted = modelNode.GetName() 
     #else:
       #print("Nothing Selected")
 
@@ -158,19 +172,4 @@ class DisplayName_v2Test(ScriptedLoadableModuleTest):
     module.  For example, if a developer removes a feature that you depend on,
     your test should break so they know that the feature is needed.
     """
-
-    self.delayDisplay("Starting the test")
-    #
-    # first, get some data
-    #
-    import SampleData
-    SampleData.downloadFromURL(
-      nodeNames='FA',
-      fileNames='FA.nrrd',
-      uris='http://slicer.kitware.com/midas3/download?items=5767')
-    self.delayDisplay('Finished with download and loading')
-
-    volumeNode = slicer.util.getNode(pattern="FA")
-    logic = DisplayName_v2Logic()
-    self.assertIsNotNone( logic.hasImageData(volumeNode) )
-    self.delayDisplay('Test passed!')
+    pass
